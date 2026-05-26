@@ -55,6 +55,7 @@ A chat application built on .NET 10 using CQRS (Command Query Responsibility Seg
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Docker](https://www.docker.com/)
+- [Node.js 20+](https://nodejs.org/)
 
 ### Start Services
 
@@ -66,6 +67,7 @@ This command starts:
 - **PostgreSQL** - `localhost:5432` (user: `postgres`, pass: `postgres`)
 - **MongoDB** - `localhost:27017`
 - **RabbitMQ** - `localhost:5672` (AMQP), `localhost:15672` (Management UI)
+- **Redis** - `localhost:6379`
 
 ### Run Migrations
 
@@ -81,17 +83,57 @@ dotnet ef database update \
   --startup-project src/ChatApp.Api
 ```
 
+### Install JavaScript Dependencies
+
+```bash
+npm install
+```
+
+This installs all dependencies for both `apps/client` and `apps/socket-bridge` via Turborepo workspaces.
+
 ### Run the Application
 
+You need to start 3 processes in separate terminals:
+
+**Terminal 1 - .NET API:**
 ```bash
 dotnet run --project src/ChatApp.Api/ChatApp.Api.csproj
 ```
 
-### API Documentation
+**Terminal 2 - Socket.IO Bridge + React Client (via Turborepo):**
+```bash
+npm run dev
+```
 
+Or run them individually:
+
+```bash
+# Socket.IO Bridge only
+npx turbo dev --filter=@chatapp/socket-bridge
+
+# React Client only
+npx turbo dev --filter=@chatapp/client
 ```
-http://localhost:5000/scalar/v1
+
+### Build for Production
+
+```bash
+# Build all JavaScript apps
+npm run build
+
+# Build specific app
+npx turbo build --filter=@chatapp/client
 ```
+
+### Service URLs
+
+| Service | URL |
+|---------|-----|
+| React Client | http://localhost:3000 |
+| Socket.IO Bridge | http://localhost:3001 |
+| .NET API | http://localhost:5268 |
+| API Documentation | http://localhost:5268/scalar/v1 |
+| RabbitMQ Management | http://localhost:15672 |
 
 ## API Endpoints
 
@@ -145,6 +187,7 @@ services:
   rabbitmq:    # localhost:5672, Management: localhost:15672
   postgres:    # localhost:5432
   mongodb:     # localhost:27017
+  redis:       # localhost:6379
 ```
 
 ## License
