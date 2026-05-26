@@ -1,4 +1,5 @@
 using ChatApp.Application.Chat;
+using Scalar.AspNetCore;
 using ChatApp.Application.EventHandler;
 using ChatApp.Application.Middleware;
 using ChatApp.Domain;
@@ -60,6 +61,12 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options.WithTitle("ChatApp API")
+               .WithTheme(ScalarTheme.BluePlanet)
+               .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    });
 }
 
 app.UseHttpsRedirection();
