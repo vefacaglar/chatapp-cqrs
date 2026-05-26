@@ -1,17 +1,18 @@
 {
   "name": "chatapp-cqrs",
   "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
+  "packageManager": "pnpm@11.1.3",
   "scripts": {
     "dev": "turbo dev",
+    "dev:all": "concurrently -n api,socket,client -c blue,green,yellow \"dotnet run --project apps/api/ChatApp.Api\" \"pnpm --filter @chatapp/socket-bridge dev\" \"pnpm --filter @chatapp/client dev\"",
+    "dev:infra": "docker compose up -d",
     "build": "turbo build",
     "lint": "turbo lint",
-    "start": "turbo start"
+    "start": "turbo start",
+    "setup": "bash scripts/setup.sh"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "turbo": "^2.5.0"
-  },
-  "packageManager": "npm@10.0.0"
+  }
 }

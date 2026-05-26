@@ -39,15 +39,33 @@ A chat application built on .NET 10 using CQRS (Command Query Responsibility Seg
 
 ## Projects
 
-| Project | Description |
-|---------|-------------|
-| `ChatApp.Api` | REST API endpoints, DI configuration |
-| `ChatApp.Application` | Command/Query handlers, Event handlers, Middleware |
-| `ChatApp.Domain` | Entities, Value Objects, Enums |
-| `ChatApp.Infrastructure` | EF Core, Repository, Event Store, RabbitMQ, Redis |
-| `ChatApp.Test` | Unit tests |
-| `apps/client` | React + Vite frontend (Turborepo workspace) |
-| `apps/socket-bridge` | Redis-to-Socket.IO bridge (Turborepo workspace) |
+| Project | Path | Description |
+|---------|------|-------------|
+| `ChatApp.Api` | `apps/api/ChatApp.Api` | REST API entry point |
+| `ChatApp.Application` | `apps/api/ChatApp.Application` | Command/Query handlers, Event handlers, Middleware |
+| `ChatApp.Domain` | `apps/api/ChatApp.Domain` | Entities, Value Objects, Enums |
+| `ChatApp.Infrastructure` | `apps/api/ChatApp.Infrastructure` | EF Core, Repository, Event Store, RabbitMQ, Redis |
+| `ChatApp.Test` | `apps/api/ChatApp.Test` | Unit tests |
+| `@chatapp/client` | `apps/client` | React + Vite frontend (Turborepo workspace) |
+| `@chatapp/socket-bridge` | `apps/socket-bridge` | Redis-to-Socket.IO bridge (Turborepo workspace) |
+
+## Project Structure
+
+```
+chatapp-cqrs/
+├── apps/
+│   ├── api/
+│   │   ├── ChatApp.Api/              ← REST API entry point
+│   │   ├── ChatApp.Application/      ← CQRS handlers, event handlers
+│   │   ├── ChatApp.Domain/           ← Entities, value objects
+│   │   ├── ChatApp.Infrastructure/   ← EF Core, RabbitMQ, Redis
+│   │   └── ChatApp.Test/             ← Unit tests
+│   ├── client/                       ← React + Vite + Tailwind
+│   └── socket-bridge/                ← Node.js Socket.IO bridge
+├── docker-compose.yml                ← PostgreSQL, MongoDB, RabbitMQ, Redis
+├── turbo.json                        ← Turborepo config
+└── package.json                      ← JS workspaces
+```
 
 ## Getting Started
 
@@ -55,49 +73,42 @@ A chat application built on .NET 10 using CQRS (Command Query Responsibility Seg
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Docker](https://www.docker.com/)
-- [Node.js 20+](https://nodejs.org/)
+- [Node.js 20+](https://nodejs.org/) (pnpm otomatik yuklenir)
 
-### Start Services
+### Tek Komutla Kurulum ve Calistirma
+
+Her seyi tek komutla kur ve baslat:
 
 ```bash
-docker compose up -d
+bash scripts/setup.sh
 ```
 
-This command starts:
-- **PostgreSQL** - `localhost:5432` (user: `postgres`, pass: `postgres`)
-- **MongoDB** - `localhost:27017`
-- **RabbitMQ** - `localhost:5672` (AMQP), `localhost:15672` (Management UI)
-- **Redis** - `localhost:6379`
+Bu script:
+1. pnpm yuklu degilse otomatik yukler
+2. JS bagliliklarini yukler (pnpm install)
+3. NuGet paketlerini restore eder
+4. Docker servislerini baslatir (PostgreSQL, MongoDB, RabbitMQ, Redis)
+5. Veritabani migration uygular
 
-### Run Migrations
+Sonra tum servisleri baslat:
 
 ```bash
-dotnet tool install --global dotnet-ef
-
-dotnet ef migrations add InitialCreate \
-  --project src/ChatApp.Infrastructure \
-  --startup-project src/ChatApp.Api
-
-dotnet ef database update \
-  --project src/ChatApp.Infrastructure \
-  --startup-project src/ChatApp.Api
+pnpm dev:all
 ```
 
-### Install JavaScript Dependencies
+Bu komut .NET API, Socket.IO Bridge ve React Client'i paralel baslatir.
+
+### Ayri Ayri Calistirma
 
 ```bash
-npm install
-```
+# Docker altyapi
+pnpm dev:infra
 
-This installs all dependencies for both `apps/client` and `apps/socket-bridge` via Turborepo workspaces.
+# Sadece JS uygulamalari
+pnpm dev
 
-### Run the Application
-
-You need to start 3 processes in separate terminals:
-
-**Terminal 1 - .NET API:**
-```bash
-dotnet run --project src/ChatApp.Api/ChatApp.Api.csproj
+# .NET API
+dotnet run --project apps/api/ChatApp.Api
 ```
 
 **Terminal 2 - Socket.IO Bridge + React Client (via Turborepo):**
@@ -118,11 +129,11 @@ npx turbo dev --filter=@chatapp/client
 ### Build for Production
 
 ```bash
-# Build all JavaScript apps
-npm run build
+# Tum JS uygulamalari
+pnpm build
 
-# Build specific app
-npx turbo build --filter=@chatapp/client
+# Tek uygulama
+pnpm --filter @chatapp/client build
 ```
 
 ### Service URLs
@@ -159,14 +170,18 @@ npx turbo build --filter=@chatapp/client
                               ▼
                         Write to PostgreSQL
                               │
-                              ▼
-                        Publish EventCreatedChatRoom (RabbitMQ)
+                              ├─▶ Publish EventCreatedChatRoom (RabbitMQ)
+                              │     │
+                              │     ▼
+                              │   CreatedChatRoomEventHandler
+                              │     │
+                              │     ├─▶ Write to MongoDB (Read Model)
+                              │     └─▶ Publish to Redis (chat:room:created)
+                              │           │
+                              │           ▼
+                              │         Socket.IO Bridge → WebSocket → Client
                               │
-                              ▼
-                        CreatedChatRoomEventHandler
-                              │
-                              ▼
-                        Write to MongoDB (Read Model)
+                              └─▶ Return { code: "guid" }
 
 2. GET /api/v1/chat/{id}  ──▶  GetChatRoomByIdQuery
                                     │
