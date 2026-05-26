@@ -2,6 +2,20 @@ import { Server } from 'socket.io';
 import Redis from 'ioredis';
 import config from './config.js';
 
+function toCamelCase(str) {
+  return str.charAt(0).toLowerCase() + str.slice(1);
+}
+
+function camelizeKeys(obj) {
+  if (Array.isArray(obj)) return obj.map(camelizeKeys);
+  if (obj !== null && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [toCamelCase(key), camelizeKeys(value)])
+    );
+  }
+  return obj;
+}
+
 const redisSub = new Redis({
   host: config.redis.host,
   port: config.redis.port,
@@ -53,8 +67,9 @@ redisSub.subscribe(config.channels.roomCreated, (err) => {
 
 redisSub.on('pmessage', (pattern, channel, message) => {
   try {
-    const data = JSON.parse(message);
-    const roomId = data.RoomId || data.roomId;
+    const raw = JSON.parse(message);
+    const data = camelizeKeys(raw);
+    const roomId = data.roomId;
 
     if (roomId) {
       io.to(`room:${roomId}`).emit('message:new', data);
@@ -67,7 +82,8 @@ redisSub.on('pmessage', (pattern, channel, message) => {
 
 redisSub.on('message', (channel, message) => {
   try {
-    const data = JSON.parse(message);
+    const raw = JSON.parse(message);
+    const data = camelizeKeys(raw);
 
     if (channel === config.channels.roomCreated) {
       io.emit('room:created', data);
