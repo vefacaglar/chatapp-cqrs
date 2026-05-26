@@ -21,40 +21,42 @@ function AppLayout({ userName, rooms, onRefresh }) {
     <div className="flex h-screen overflow-hidden">
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-72 bg-slate-900 border-r border-slate-700 flex flex-col transform transition-transform lg:transform-none ${
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-72 bg-vscode-sidebar border-r border-vscode-border flex flex-col transform transition-transform lg:transform-none ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="p-4 border-b border-slate-700">
+        <div className="p-4 border-b border-vscode-border">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+            <h1 className="text-xl font-bold text-vscode-text flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-vscode-accent flex items-center justify-center shadow-md shadow-vscode-accent/20">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
               ChatApp
             </h1>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="text-slate-400 hover:text-white lg:hidden"
+              className="text-vscode-muted hover:text-vscode-text lg:hidden transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <p className="text-sm text-slate-400 mt-1">Hoş geldin, {userName}</p>
+          <p className="text-sm text-vscode-muted mt-2 ml-10">Hoş geldin, {userName}</p>
         </div>
 
         <div className="p-3">
           <button
             onClick={() => setShowCreateModal(true)}
-            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2.5 bg-vscode-accent hover:bg-vscode-accent-hover text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-vscode-accent/30 active:scale-[0.98]"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -68,11 +70,11 @@ function AppLayout({ userName, rooms, onRefresh }) {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0 bg-slate-800">
-        <div className="lg:hidden p-3 border-b border-slate-700">
+      <main className="flex-1 flex flex-col min-w-0 bg-vscode-bg">
+        <div className="lg:hidden p-3 border-b border-vscode-border">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="text-slate-400 hover:text-white"
+            className="text-vscode-muted hover:text-vscode-text transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -84,9 +86,9 @@ function AppLayout({ userName, rooms, onRefresh }) {
           <Route
             path="/"
             element={
-              <div className="flex-1 flex items-center justify-center text-slate-500">
+              <div className="flex-1 flex items-center justify-center text-vscode-dim">
                 <div className="text-center">
-                  <svg className="w-16 h-16 mx-auto mb-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-20 h-20 mx-auto mb-4 text-vscode-border" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                   <p className="text-lg">Bir oda seçin veya yeni oda oluşturun</p>
@@ -139,7 +141,7 @@ export default function App() {
     return (
       <SocketProvider>
         <BrowserRouter>
-          <Toaster position="top-right" toastOptions={{ style: { background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155' } }} />
+          <Toaster position="top-right" toastOptions={{ style: { background: '#252526', color: '#cccccc', border: '1px solid #3c3c3c' } }} />
           <WelcomePage onSetUserName={handleSetUserName} />
         </BrowserRouter>
       </SocketProvider>
@@ -149,10 +151,10 @@ export default function App() {
   return (
     <SocketProvider>
       <BrowserRouter>
-        <Toaster position="top-right" toastOptions={{ style: { background: '#1e293b', color: '#e2e8f0', border: '1px solid #334155' } }} />
+        <Toaster position="top-right" toastOptions={{ style: { background: '#252526', color: '#cccccc', border: '1px solid #3c3c3c' } }} />
         {loading ? (
-          <div className="flex h-screen items-center justify-center bg-slate-900">
-            <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+          <div className="flex h-screen items-center justify-center bg-vscode-bg">
+            <div className="animate-spin w-10 h-10 border-2 border-vscode-accent border-t-transparent rounded-full"></div>
           </div>
         ) : (
           <AppLayout userName={userName} rooms={rooms} onRefresh={fetchRooms} />

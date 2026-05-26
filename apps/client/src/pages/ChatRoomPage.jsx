@@ -68,7 +68,7 @@ export default function ChatRoomPage({ userName }) {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+        <div className="animate-spin w-10 h-10 border-2 border-vscode-accent border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -77,21 +77,21 @@ export default function ChatRoomPage({ userName }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-slate-700 flex items-center gap-4">
+      <div className="px-6 py-4 border-b border-vscode-border flex items-center gap-4 bg-vscode-sidebar">
         <button
           onClick={() => navigate('/')}
-          className="text-slate-400 hover:text-white transition-colors lg:hidden"
+          className="text-vscode-muted hover:text-vscode-text transition-colors lg:hidden"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+        <div className="w-11 h-11 rounded-xl bg-vscode-accent flex items-center justify-center text-white font-bold shadow-md shadow-vscode-accent/20">
           {room.name[0].toUpperCase()}
         </div>
         <div>
-          <h2 className="font-semibold text-white text-lg">{room.name}</h2>
-          <p className="text-sm text-slate-400">
+          <h2 className="font-semibold text-vscode-text text-lg">{room.name}</h2>
+          <p className="text-sm text-vscode-muted">
             {room.messages?.length || 0} mesaj
           </p>
         </div>
