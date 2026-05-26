@@ -2,7 +2,7 @@
 using ChatApp.Domain;
 using ChatApp.Domain.Chat.Request;
 using ChatApp.Domain.Chat.Response;
-using ChatApp.Application.Command;
+using CustomDispatcher.Abstractions.Dispatching;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChatApp.Api.Controllers
@@ -21,20 +21,20 @@ namespace ChatApp.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ResultResponse<CreateChatRoomResponse>>> CreateChatRoomAsync(CreateChatRoomRequest request)
+        public async Task<ActionResult<CreateChatRoomCommandResult>> CreateChatRoomAsync(CreateChatRoomRequest request)
         {
             var command = new CreateChatRoomCommand(request.Name);
 
-            var result = await _dispatcher.Dispatch(command);
+            var result = await _dispatcher.DispatchAsync<CreateChatRoomCommand, CreateChatRoomCommandResult>(command);
 
             return Ok(result);
         }
 
         [HttpPost("message")]
-        public async Task<ActionResult<ResultResponse<object>>> SendMessageAsync(SendMessageRequest request)
+        public async Task<ActionResult<SendMessageCommandResult>> SendMessageAsync(SendMessageRequest request)
         {
             var command = new SendMessageCommand(request.RoomId, request.Message, request.UserName);
-            var result = await _dispatcher.Dispatch(command);
+            var result = await _dispatcher.DispatchAsync<SendMessageCommand, SendMessageCommandResult>(command);
             return Ok(result);
         }
     }

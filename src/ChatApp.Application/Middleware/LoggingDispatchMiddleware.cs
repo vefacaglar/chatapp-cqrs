@@ -1,17 +1,17 @@
-﻿using ChatApp.Infrastructure;
-using MediatR;
+using ChatApp.Infrastructure;
+using CustomDispatcher.Abstractions.Pipelines;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text.Json;
 
-namespace ChatApp.Application
+namespace ChatApp.Application.Middleware
 {
-    public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    public class LoggingDispatchMiddleware<TRequest, TResult> : IDispatchMiddleware<TRequest, TResult>
     {
         private readonly ILogger<TRequest> _logger;
         private readonly IEventStore _eventStore;
 
-        public LoggingBehavior(
+        public LoggingDispatchMiddleware(
             ILogger<TRequest> logger,
             IEventStore eventStore
             )
@@ -20,10 +20,12 @@ namespace ChatApp.Application
             _eventStore = eventStore;
         }
 
-        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+        public async Task<TResult> HandleAsync(
+            TRequest request,
+            DispatchContinuation<TResult> next,
+            CancellationToken cancellationToken = default)
         {
-            var requestName = request.GetType().Name;
-
+            var requestName = request!.GetType().Name;
             var requestNameWithGuid = $"{requestName} [{Guid.NewGuid()}]";
 
             _logger.LogInformation($"[START] {requestNameWithGuid}");

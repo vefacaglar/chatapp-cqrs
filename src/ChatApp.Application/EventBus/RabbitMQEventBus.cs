@@ -19,18 +19,17 @@ namespace ChatApp.Application.EventBus
         private readonly string BROKER_NAME = "chat_events";
 
         private readonly IEventDispatcher _eventDispatcher;
-        private readonly IPersistentConnection<IModel> _connection;
+        private readonly IPersistentConnection<IChannel> _connection;
         private readonly ILogger<RabbitMQEventBus> _logger;
-        private readonly static Dictionary<string, Type> _subsManager = new();
+        private readonly Dictionary<string, Type> _subsManager = new();
         private readonly int _retryCount;
 
-        private IModel _consumerChannel;
-
+        private IChannel _consumerChannel;
         private bool disposedValue = false;
 
         public RabbitMQEventBus(
             IEventDispatcher eventDispatcher,
-            IPersistentConnection<IModel> connection,
+            IPersistentConnection<IChannel> connection,
             ILogger<RabbitMQEventBus> logger,
             int retryCount = 5
             )
@@ -39,7 +38,6 @@ namespace ChatApp.Application.EventBus
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _retryCount = retryCount;
-            _consumerChannel = CreateConsumerChannel();
 
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
             {
@@ -61,24 +59,26 @@ namespace ChatApp.Application.EventBus
                     _logger.LogWarning("retrying message because of error {0}", ex.ToString());
                 });
 
-            using var channel = _connection.CreateModel();
+            using var channel = _connection.CreateChannel();
             var eventName = @event.GetType().Name;
 
-            channel.ExchangeDeclare(exchange: BROKER_NAME, type: "direct");
+            channel.ExchangeDeclareAsync(exchange: BROKER_NAME, type: ExchangeType.Direct).GetAwaiter().GetResult();
 
             var message = JsonConvert.SerializeObject(@event);
             var body = Encoding.UTF8.GetBytes(message);
 
             policy.Execute(() =>
             {
-                var properties = channel.CreateBasicProperties();
-                properties.DeliveryMode = 2; // persistent
+                var properties = new BasicProperties
+                {
+                    DeliveryMode = DeliveryModes.Persistent
+                };
 
-                channel.BasicPublish(exchange: BROKER_NAME,
+                channel.BasicPublishAsync(exchange: BROKER_NAME,
                     routingKey: eventName,
                     mandatory: true,
                     basicProperties: properties,
-                    body: body);
+                    body: body).GetAwaiter().GetResult();
             });
         }
 
@@ -97,48 +97,49 @@ namespace ChatApp.Application.EventBus
                 _connection.TryConnect();
             }
 
-            using var channel = _connection.CreateModel();
-            channel.QueueBind(queue: QUEUE_NAME,
+            using var channel = _connection.CreateChannel();
+            channel.QueueBindAsync(queue: QUEUE_NAME,
                 exchange: BROKER_NAME,
-                routingKey: eventName);
+                routingKey: eventName).GetAwaiter().GetResult();
         }
 
-        private IModel CreateConsumerChannel()
+        private IChannel CreateConsumerChannel()
         {
             if (!_connection.IsConnected)
             {
                 _connection.TryConnect();
             }
 
-            var channel = _connection.CreateModel();
-            channel.ExchangeDeclare(exchange: BROKER_NAME,
-                type: "direct");
+            var channel = _connection.CreateChannel();
+            channel.ExchangeDeclareAsync(exchange: BROKER_NAME,
+                type: ExchangeType.Direct).GetAwaiter().GetResult();
 
-            channel.QueueDeclare(queue: QUEUE_NAME,
+            channel.QueueDeclareAsync(queue: QUEUE_NAME,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
-                arguments: null);
+                arguments: null).GetAwaiter().GetResult();
 
-            var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += async (model, ea) =>
+            var consumer = new AsyncEventingBasicConsumer(channel);
+            consumer.ReceivedAsync += async (model, ea) =>
             {
                 var eventName = ea.RoutingKey;
                 var message = Encoding.UTF8.GetString(ea.Body.ToArray());
 
                 await ProcessEvent(eventName, message);
 
-                channel.BasicAck(ea.DeliveryTag, multiple: false);
+                await channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
             };
 
-            channel.BasicConsume(queue: QUEUE_NAME,
+            channel.BasicConsumeAsync(queue: QUEUE_NAME,
                 autoAck: false,
-                consumer: consumer);
+                consumer: consumer).GetAwaiter().GetResult();
 
-            channel.CallbackException += (sender, ea) =>
+            channel.CallbackExceptionAsync += (sender, ea) =>
             {
-                _consumerChannel.Dispose();
+                _consumerChannel?.Dispose();
                 _consumerChannel = CreateConsumerChannel();
+                return Task.CompletedTask;
             };
 
             return channel;
@@ -161,7 +162,7 @@ namespace ChatApp.Application.EventBus
             {
                 if (disposing)
                 {
-                    if(_consumerChannel != null)
+                    if (_consumerChannel != null)
                     {
                         _consumerChannel.Dispose();
                     }

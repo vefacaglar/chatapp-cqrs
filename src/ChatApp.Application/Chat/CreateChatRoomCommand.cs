@@ -1,5 +1,5 @@
 ﻿using ChatApp.Domain.Entities;
-using ChatApp.Application.Command;
+using CustomDispatcher.Abstractions.Commands;
 using ChatApp.Infrastructure;
 using ChatApp.Infrastructure.Transactions;
 using Newtonsoft.Json;
@@ -17,12 +17,12 @@ namespace ChatApp.Application.Chat
         }
     }
 
-    public class CreateChatRoomCommandResult : CommandResult
+    public class CreateChatRoomCommandResult
     {
-        public string Code { get; set; }
+        public string Code { get; set; } = string.Empty;
     }
 
-    public sealed class CreateChatRoomCommandHandler : ICommandHandler<CreateChatRoomCommand, CreateChatRoomCommandResult>
+    public sealed class CreateChatRoomCommandHandler : ICommandProcessor<CreateChatRoomCommand, CreateChatRoomCommandResult>
     {
         private readonly IUnitOfWork _uow;
         private readonly IEventBus _eventBus;
@@ -36,7 +36,7 @@ namespace ChatApp.Application.Chat
             _eventBus = eventBus;
         }
 
-        public async Task<CreateChatRoomCommandResult> Handle(CreateChatRoomCommand command)
+        public async Task<CreateChatRoomCommandResult> HandleAsync(CreateChatRoomCommand command, CancellationToken cancellationToken = default)
         {
             var newRoom = new ChatRoom(command.Name);
 

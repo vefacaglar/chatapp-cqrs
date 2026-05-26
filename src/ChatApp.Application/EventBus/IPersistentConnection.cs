@@ -6,6 +6,6 @@
 
         bool TryConnect();
 
-        T CreateModel();
+        T CreateChannel();
     }
 }

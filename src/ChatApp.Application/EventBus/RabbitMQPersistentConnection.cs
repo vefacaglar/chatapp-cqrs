@@ -9,7 +9,7 @@ using System.Net.Sockets;
 
 namespace ChatApp.Application.EventBus
 {
-    public class RabbitMQPersistentConnection : IPersistentConnection<IModel>
+    public class RabbitMQPersistentConnection : IPersistentConnection<IChannel>
     {
         private readonly IConnectionFactory _connectionFactory;
         private readonly ILogger<RabbitMQPersistentConnection> _logger;
@@ -19,13 +19,14 @@ namespace ChatApp.Application.EventBus
         private bool _disposed;
 
         public RabbitMQPersistentConnection(
-            ChatAppConfiguration configuration,
-            ILogger<RabbitMQPersistentConnection> logger
+            IConnectionFactory connectionFactory,
+            ILogger<RabbitMQPersistentConnection> logger,
+            int retryCount = 5
             )
         {
-            _connectionFactory = CreateFactory(configuration);
+            _connectionFactory = connectionFactory;
             _logger = logger;
-            _retryCount = configuration.RetryCount;
+            _retryCount = retryCount;
         }
 
         public bool IsConnected
@@ -36,14 +37,14 @@ namespace ChatApp.Application.EventBus
             }
         }
 
-        public IModel CreateModel()
+        public IChannel CreateChannel()
         {
             if (!IsConnected)
             {
                 throw new InvalidOperationException("No RabbitMQ connections are available to perform this action");
             }
 
-            return _connection.CreateModel();
+            return _connection.CreateChannelAsync().GetAwaiter().GetResult();
         }
 
         public void Dispose()
@@ -54,7 +55,7 @@ namespace ChatApp.Application.EventBus
 
             try
             {
-                _connection.Dispose();
+                _connection?.Dispose();
             }
             catch (IOException ex)
             {
@@ -79,14 +80,16 @@ namespace ChatApp.Application.EventBus
                 policy.Execute(() =>
                 {
                     _connection = _connectionFactory
-                          .CreateConnection();
+                          .CreateConnectionAsync()
+                          .GetAwaiter()
+                          .GetResult();
                 });
 
                 if (IsConnected)
                 {
-                    _connection.ConnectionShutdown += OnConnectionShutdown;
-                    _connection.CallbackException += OnCallbackException;
-                    _connection.ConnectionBlocked += OnConnectionBlocked;
+                    _connection.ConnectionShutdownAsync += OnConnectionShutdown;
+                    _connection.CallbackExceptionAsync += OnCallbackException;
+                    _connection.ConnectionBlockedAsync += OnConnectionBlocked;
 
                     _logger.LogInformation($"RabbitMQ persistent connection acquired a connection {_connection.Endpoint.HostName} and is subscribed to failure events");
 
@@ -101,49 +104,34 @@ namespace ChatApp.Application.EventBus
             }
         }
 
-        private IConnectionFactory CreateFactory(ChatAppConfiguration configuration)
+        private Task OnCallbackException(object sender, CallbackExceptionEventArgs e)
         {
-            var factory = new ConnectionFactory()
-            {
-                HostName = configuration.ConnectionStrings.EventBus.Connection,
-            };
-
-            if (!string.IsNullOrEmpty(configuration.ConnectionStrings.EventBus.UserName))
-            {
-                factory.UserName = configuration.ConnectionStrings.EventBus.UserName;
-            }
-
-            if (!string.IsNullOrEmpty(configuration.ConnectionStrings.EventBus.Password))
-            {
-                factory.Password = configuration.ConnectionStrings.EventBus.Password;
-            }
-
-            return factory;
-        }
-        private void OnCallbackException(object sender, CallbackExceptionEventArgs e)
-        {
-            if (_disposed) return;
+            if (_disposed) return Task.CompletedTask;
 
             _logger.LogWarning("A RabbitMQ connection throw exception. Trying to re-connect...");
 
             TryConnect();
+            return Task.CompletedTask;
         }
 
-        private void OnConnectionBlocked(object sender, ConnectionBlockedEventArgs e)
+        private Task OnConnectionBlocked(object sender, ConnectionBlockedEventArgs e)
         {
-            if (_disposed) return;
+            if (_disposed) return Task.CompletedTask;
 
             _logger.LogWarning("A RabbitMQ connection is shutdown. Trying to re-connect...");
 
             TryConnect();
+            return Task.CompletedTask;
         }
-        private void OnConnectionShutdown(object sender, ShutdownEventArgs reason)
+
+        private Task OnConnectionShutdown(object sender, ShutdownEventArgs reason)
         {
-            if (_disposed) return;
+            if (_disposed) return Task.CompletedTask;
 
             _logger.LogWarning("A RabbitMQ connection is on shutdown. Trying to re-connect...");
 
             TryConnect();
+            return Task.CompletedTask;
         }
     }
 }

@@ -1,32 +1,37 @@
-﻿using Autofac;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace ChatApp.Infrastructure
 {
     public class EventDispatcher : IEventDispatcher
     {
-        private readonly IComponentContext _componentContext;
+        private readonly IServiceProvider _serviceProvider;
 
         public EventDispatcher(
-            IComponentContext componentContext
+            IServiceProvider serviceProvider
             )
         {
-            _componentContext = componentContext;
+            _serviceProvider = serviceProvider;
         }
 
         public Task Dispatch<TEvent>(TEvent e) where TEvent : IEvent
         {
-            if(e == null)
+            if (e == null)
             {
                 throw new ArgumentNullException(nameof(e));
             }
 
             var eventType = typeof(IEventHandler<>).MakeGenericType(e.GetType());
 
-            dynamic handler = _componentContext.Resolve(eventType);
+            var handler = _serviceProvider.GetService(eventType);
+
+            if (handler == null)
+            {
+                throw new InvalidOperationException($"No handler registered for event type {e.GetType().Name}");
+            }
 
             return (Task)eventType
-                .GetMethod("Handle")
-                .Invoke(handler, new object[] { e });
+                .GetMethod("Handle")!
+                .Invoke(handler, new object[] { e })!;
         }
     }
 }
