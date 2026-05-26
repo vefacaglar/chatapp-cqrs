@@ -16,8 +16,8 @@ var configuration = builder.Configuration;
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<ChatDbContext>(options => options.UseSqlServer(configuration["ConnectionStrings:ChatDbCommand"]));
+builder.Services.AddOpenApi();
+builder.Services.AddDbContext<ChatDbContext>(options => options.UseNpgsql(configuration["ConnectionStrings:ChatDbCommand"]));
 builder.Services.AddSingleton(configuration.Get<ChatAppConfiguration>()!);
 
 builder.Services.AddDomain();
@@ -59,10 +59,8 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
+    app.MapOpenApi();
 }
-
-app.UseSwagger();
-app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 

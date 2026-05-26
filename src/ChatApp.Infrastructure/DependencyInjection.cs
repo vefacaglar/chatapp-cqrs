@@ -10,7 +10,7 @@ namespace ChatApp.Infrastructure
         {
             services.AddScoped<IUnitOfWork, ChatDbUnitOfWork>();
             services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
-            services.AddTransient<IMsSqlDbConnectionFactory, MsSqlConnectionFactory>();
+            services.AddTransient<IPostgresDbConnectionFactory, PostgresDbConnectionFactory>();
             services.AddTransient<IEventStore, SqlEventStore>();
             services.AddTransient<IChatRepository, ChatRepository>();
             return services;

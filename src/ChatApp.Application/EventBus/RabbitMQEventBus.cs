@@ -98,6 +98,8 @@ namespace ChatApp.Application.EventBus
             }
 
             using var channel = _connection.CreateChannel();
+            channel.ExchangeDeclareAsync(exchange: BROKER_NAME, type: ExchangeType.Direct).GetAwaiter().GetResult();
+            channel.QueueDeclareAsync(queue: QUEUE_NAME, durable: true, exclusive: false, autoDelete: false).GetAwaiter().GetResult();
             channel.QueueBindAsync(queue: QUEUE_NAME,
                 exchange: BROKER_NAME,
                 routingKey: eventName).GetAwaiter().GetResult();

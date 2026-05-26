@@ -1,5 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
+using Npgsql;
 using System.Data;
 
 namespace ChatApp.Infrastructure
@@ -9,15 +9,15 @@ namespace ChatApp.Infrastructure
         IDbConnection CreateConnection();
     }
 
-    public interface IMsSqlDbConnectionFactory : IDbConnectionFactory
+    public interface IPostgresDbConnectionFactory : IDbConnectionFactory
     {
     }
 
-    public class MsSqlConnectionFactory : IMsSqlDbConnectionFactory
+    public class PostgresDbConnectionFactory : IPostgresDbConnectionFactory
     {
         private readonly IConfiguration _configuration;
 
-        public MsSqlConnectionFactory(
+        public PostgresDbConnectionFactory(
             IConfiguration configuration
             )
         {
@@ -26,7 +26,7 @@ namespace ChatApp.Infrastructure
 
         public IDbConnection CreateConnection()
         {
-            return new SqlConnection(_configuration["ConnectionStrings:ChatDbRead"]);
+            return new NpgsqlConnection(_configuration["ConnectionStrings:ChatDbRead"]);
         }
     }
 }
