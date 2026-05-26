@@ -15,7 +15,7 @@ namespace ChatApp.Application.EventBus
         private readonly ILogger<RabbitMQPersistentConnection> _logger;
         private readonly int _retryCount;
         private readonly object sync_root = new object();
-        private IConnection _connection;
+        private IConnection? _connection;
         private bool _disposed;
 
         public RabbitMQPersistentConnection(
@@ -44,7 +44,7 @@ namespace ChatApp.Application.EventBus
                 throw new InvalidOperationException("No RabbitMQ connections are available to perform this action");
             }
 
-            return _connection.CreateChannelAsync().GetAwaiter().GetResult();
+            return _connection!.CreateChannelAsync().GetAwaiter().GetResult();
         }
 
         public void Dispose()
@@ -87,11 +87,11 @@ namespace ChatApp.Application.EventBus
 
                 if (IsConnected)
                 {
-                    _connection.ConnectionShutdownAsync += OnConnectionShutdown;
-                    _connection.CallbackExceptionAsync += OnCallbackException;
-                    _connection.ConnectionBlockedAsync += OnConnectionBlocked;
+                    _connection!.ConnectionShutdownAsync += OnConnectionShutdown;
+                    _connection!.CallbackExceptionAsync += OnCallbackException;
+                    _connection!.ConnectionBlockedAsync += OnConnectionBlocked;
 
-                    _logger.LogInformation($"RabbitMQ persistent connection acquired a connection {_connection.Endpoint.HostName} and is subscribed to failure events");
+                    _logger.LogInformation($"RabbitMQ persistent connection acquired a connection {_connection!.Endpoint.HostName} and is subscribed to failure events");
 
                     return true;
                 }

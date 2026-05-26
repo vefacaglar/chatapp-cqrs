@@ -3,20 +3,20 @@
     public class ChatAppConfiguration
     {
         public int RetryCount { get; set; }
-        public ConnectionStrings ConnectionStrings { get; set; }
+        public required ConnectionStrings ConnectionStrings { get; set; }
     }
 
     public class ConnectionStrings
     {
-        public string ChatDbCommand { get; set; }
-        public string ChatDbRead { get; set; }
-        public EventBusSetting EventBus { get; set; }
+        public required string ChatDbCommand { get; set; }
+        public required string ChatDbRead { get; set; }
+        public required EventBusSetting EventBus { get; set; }
     }
 
     public class EventBusSetting
     {
-        public string Connection { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        public required string Connection { get; set; }
+        public required string UserName { get; set; }
+        public required string Password { get; set; }
     }
 }

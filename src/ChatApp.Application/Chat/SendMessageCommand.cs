@@ -55,6 +55,12 @@ namespace ChatApp.Application.Chat
         public async Task<SendMessageCommandResult> HandleAsync(SendMessageCommand command, CancellationToken cancellationToken = default)
         {
             var room = await _chatRepository.GetByIdAsync(command.RoomId);
+
+            if (room == null)
+            {
+                return new SendMessageCommandResult(false);
+            }
+
             room.AddMessage(command.UserName, command.Message);
             await _uow.SaveChangesAsync();
 

@@ -4,10 +4,10 @@
     {
         public BaseEntity()
         {
-            CreatedAt = DateTime.Now;
+            CreatedAt = DateTime.UtcNow;
         }
 
-        public T Id { get; set; }
+        public T? Id { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }

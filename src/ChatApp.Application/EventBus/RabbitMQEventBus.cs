@@ -24,7 +24,7 @@ namespace ChatApp.Application.EventBus
         private readonly Dictionary<string, Type> _subsManager = new();
         private readonly int _retryCount;
 
-        private IChannel _consumerChannel;
+        private IChannel? _consumerChannel;
         private bool disposedValue = false;
 
         public RabbitMQEventBus(
@@ -154,7 +154,10 @@ namespace ChatApp.Application.EventBus
                 var @type = _subsManager[eventName];
                 var @event = JsonConvert.DeserializeObject(message, @type) as IEvent;
 
-                await _eventDispatcher.Dispatch(@event);
+                if (@event != null)
+                {
+                    await _eventDispatcher.Dispatch(@event);
+                }
             }
         }
 
