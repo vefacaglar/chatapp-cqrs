@@ -2,6 +2,7 @@
 using ChatApp.Domain.Entities.Command;
 using ChatApp.Infrastructure;
 using ChatApp.Infrastructure.Repositories.Abstractions;
+using ChatApp.Infrastructure.Transactions;
 
 namespace ChatApp.Application.Chat
 {
@@ -63,6 +64,8 @@ namespace ChatApp.Application.Chat
 
             room.AddMessage(command.UserName, command.Message);
             await _uow.SaveChangesAsync();
+
+            _eventBus.Publish(new MessageSentEvent(command.RoomId, command.UserName, command.Message));
 
             return new SendMessageCommandResult(true);
         }

@@ -1,7 +1,7 @@
 using ChatApp.Application.Chat;
-using Scalar.AspNetCore;
 using ChatApp.Application.EventHandler;
 using ChatApp.Application.Middleware;
+using ChatApp.Application.Services;
 using ChatApp.Domain;
 using ChatApp.Infrastructure;
 using ChatApp.Infrastructure.Transactions;
@@ -10,6 +10,7 @@ using ChatApp.Infrastructure.Database.Command;
 using CustomDispatcher;
 using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,8 +31,11 @@ builder.Services.AddCustomDispatcher(options =>
     options.AddDispatchMiddleware(typeof(LoggingDispatchMiddleware<,>));
 });
 
+builder.Services.AddSingleton<IMongoDbService, MongoDbService>();
+
 builder.Services.AddSingleton<IEventDispatcher, EventDispatcher>();
 builder.Services.AddTransient<IEventHandler<EventCreatedChatRoom>, CreatedChatRoomEventHandler>();
+builder.Services.AddTransient<IEventHandler<MessageSentEvent>, SentMessageEventHandler>();
 
 builder.Services.AddSingleton<IConnectionFactory>(sp =>
 {
@@ -84,4 +88,5 @@ void ConfigureEventBus(IApplicationBuilder app)
     var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
 
     eventBus.Subscribe<EventCreatedChatRoom>();
+    eventBus.Subscribe<MessageSentEvent>();
 }

@@ -25,6 +25,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  mongodb:
+    image: mongo:7
+    container_name: chatapp-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
 volumes:
   rabbitmq_data:
   postgres_data:
+  mongo_data:
