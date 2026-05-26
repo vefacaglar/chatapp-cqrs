@@ -103,6 +103,8 @@ namespace ChatApp.Application.EventBus
             channel.QueueBindAsync(queue: QUEUE_NAME,
                 exchange: BROKER_NAME,
                 routingKey: eventName).GetAwaiter().GetResult();
+
+            _consumerChannel ??= CreateConsumerChannel();
         }
 
         private IChannel CreateConsumerChannel()
@@ -156,8 +158,24 @@ namespace ChatApp.Application.EventBus
 
                 if (@event != null)
                 {
-                    await _eventDispatcher.Dispatch(@event);
+                    try
+                    {
+                        await _eventDispatcher.Dispatch(@event);
+                        _logger.LogInformation("Processed event {EventName}", eventName);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing event {EventName}", eventName);
+                    }
                 }
+                else
+                {
+                    _logger.LogWarning("Could not deserialize event {EventName}", eventName);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("No handler registered for event {EventName}", eventName);
             }
         }
 

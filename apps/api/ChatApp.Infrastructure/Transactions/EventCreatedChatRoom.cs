@@ -6,6 +6,10 @@ namespace ChatApp.Infrastructure.Transactions
     {
         public EventLog Data { get; set; }
 
+        public EventCreatedChatRoom()
+        {
+        }
+
         public EventCreatedChatRoom(EventLog eventLog)
         {
             Data = eventLog;
