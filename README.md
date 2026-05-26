@@ -4,15 +4,38 @@ A chat application built on .NET 10 using CQRS (Command Query Responsibility Seg
 
 ## Tech Stack
 
+### Backend (.NET)
+
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | .NET | 10.0 | Runtime |
 | PostgreSQL | 16 | Write Database |
 | MongoDB | 7 | Read Database |
 | RabbitMQ | 3 | Event Bus |
+| Redis | 7 | Pub/Sub (Socket.IO bridge) |
 | Entity Framework Core | 10.0 | ORM |
+| StackExchange.Redis | 2.8.16 | Redis client |
 | CustomDispatcher | 1.0.0 | CQRS Dispatch |
 | Scalar | 2.4.1 | API Documentation |
+
+### Frontend (JavaScript)
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 19 | UI framework |
+| Vite | 8 | Build tool |
+| Tailwind CSS | 4 | Styling |
+| Socket.IO Client | 4 | Real-time communication |
+| Axios | 1 | HTTP client |
+| React Router | 7 | Client-side routing |
+| Turborepo | 2 | Monorepo build system |
+
+### Socket Bridge (Node.js)
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Socket.IO | 4 | WebSocket server |
+| ioredis | 5 | Redis pub/sub subscriber |
 
 ## Projects
 
@@ -21,8 +44,10 @@ A chat application built on .NET 10 using CQRS (Command Query Responsibility Seg
 | `ChatApp.Api` | REST API endpoints, DI configuration |
 | `ChatApp.Application` | Command/Query handlers, Event handlers, Middleware |
 | `ChatApp.Domain` | Entities, Value Objects, Enums |
-| `ChatApp.Infrastructure` | EF Core, Repository, Event Store, RabbitMQ |
+| `ChatApp.Infrastructure` | EF Core, Repository, Event Store, RabbitMQ, Redis |
 | `ChatApp.Test` | Unit tests |
+| `apps/client` | React + Vite frontend (Turborepo workspace) |
+| `apps/socket-bridge` | Redis-to-Socket.IO bridge (Turborepo workspace) |
 
 ## Getting Started
 

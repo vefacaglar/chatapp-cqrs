@@ -1,5 +1,5 @@
 {
-  "name": "chatapp-socket-bridge",
+  "name": "@chatapp/socket-bridge",
   "version": "1.0.0",
   "description": "Redis pub/sub to Socket.IO bridge for ChatApp",
   "main": "src/index.js",
