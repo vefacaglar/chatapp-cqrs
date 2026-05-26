@@ -5,6 +5,7 @@
         public int RetryCount { get; set; }
         public required ConnectionStrings ConnectionStrings { get; set; }
         public required MongoDbSettings MongoDb { get; set; }
+        public required RedisSettings Redis { get; set; }
     }
 
     public class ConnectionStrings
@@ -24,5 +25,10 @@
     {
         public required string ConnectionString { get; set; }
         public required string DatabaseName { get; set; }
+    }
+
+    public class RedisSettings
+    {
+        public required string ConnectionString { get; set; }
     }
 }

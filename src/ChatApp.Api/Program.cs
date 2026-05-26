@@ -11,6 +11,7 @@ using CustomDispatcher;
 using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using Scalar.AspNetCore;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,24 @@ builder.Services.AddSingleton<IEventBus>(sp =>
     return new RabbitMQEventBus(eventDispatcher, persistentConnection, logger, config.RetryCount);
 });
 
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var config = sp.GetRequiredService<ChatAppConfiguration>();
+    return ConnectionMultiplexer.Connect(config.Redis.ConnectionString);
+});
+
+builder.Services.AddSingleton<IRedisPublisher, RedisPublisher>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -74,6 +93,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.UseAuthorization();
 
