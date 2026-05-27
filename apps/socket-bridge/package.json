@@ -1,0 +1,15 @@
+{
+  "name": "@chatapp/socket-bridge",
+  "version": "1.0.0",
+  "description": "Redis pub/sub to Socket.IO bridge for ChatApp",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "ioredis": "^5.4.1",
+    "socket.io": "^4.7.5"
+  }
+}
