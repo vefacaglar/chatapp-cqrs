@@ -2,6 +2,7 @@
 using ChatApp.Domain.Entities.Command;
 using ChatApp.Infrastructure;
 using ChatApp.Infrastructure.Repositories.Abstractions;
+using ChatApp.Infrastructure.Transactions;
 using Moq;
 
 namespace ChatApp.Test.Command
@@ -32,6 +33,40 @@ namespace ChatApp.Test.Command
             var result = await _handler.HandleAsync(command);
 
             Assert.NotEmpty(result.Code);
+        }
+
+        [Fact]
+        public async Task CreateChatRoom_WithName_ReturnsCorrectName()
+        {
+            var command = new CreateChatRoomCommand("My Room");
+
+            var result = await _handler.HandleAsync(command);
+
+            Assert.Equal("My Room", result.Name);
+        }
+
+        [Fact]
+        public async Task CreateChatRoom_SavesToRepository()
+        {
+            var command = new CreateChatRoomCommand("test");
+
+            await _handler.HandleAsync(command);
+
+            _unitOfWork.Verify(x => x.GetRepository<ChatRoom>(), Times.Once);
+            _chatRoomRepository.Verify(x => x.Add(It.IsAny<ChatRoom>()), Times.Once);
+            _unitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateChatRoom_PublishesEventCreatedChatRoom()
+        {
+            var command = new CreateChatRoomCommand("test");
+
+            await _handler.HandleAsync(command);
+
+            _eventBus.Verify(
+                x => x.Publish(It.Is<EventCreatedChatRoom>(e => e.Data.Type == "CreatedChatRoom")),
+                Times.Once);
         }
     }
 }

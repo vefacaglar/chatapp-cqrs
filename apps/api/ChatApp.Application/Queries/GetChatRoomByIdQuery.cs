@@ -27,8 +27,12 @@ namespace ChatApp.Application.Queries
         public async Task<ChatRoomReadModel?> HandleAsync(GetChatRoomByIdQuery query, CancellationToken cancellationToken = default)
         {
             var filter = Builders<ChatRoomReadModel>.Filter.Eq(x => x.Id, query.RoomId);
-            var result = await _mongoDbService.ChatRooms.Find(filter).FirstOrDefaultAsync(cancellationToken);
-            return result;
+            using var cursor = await _mongoDbService.ChatRooms.FindAsync(filter, cancellationToken: cancellationToken);
+            if (await cursor.MoveNextAsync(cancellationToken))
+            {
+                return cursor.Current.FirstOrDefault();
+            }
+            return null;
         }
     }
 }
