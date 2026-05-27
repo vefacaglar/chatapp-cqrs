@@ -365,5 +365,10 @@ FodyWeavers.xsd
 # Turborepo
 .turbo
 
+# Coverage reports
+coveragereport/
+coverage.xml
+**/TestResults/
+
 # Vite
 apps/*/dist

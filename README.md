@@ -244,6 +244,30 @@ Or let `bash scripts/setup.sh` handle it automatically.
 dotnet test
 ```
 
+### Code Coverage
+
+```bash
+# Generate coverage report
+dotnet test --collect:"XPlat Code Coverage"
+
+# Install report generator (once)
+dotnet tool install -g dotnet-reportgenerator-globaltool
+
+# Generate HTML report
+reportgenerator \
+  -reports:"apps/api/ChatApp.Test/TestResults/**/coverage.cobertura.xml" \
+  -targetdir:"coveragereport" \
+  -reporttypes:Html
+
+# Open in browser
+open coveragereport/index.html
+```
+
+> **Note:** If `reportgenerator` command is not found, add `~/.dotnet/tools` to your PATH:
+> ```bash
+> echo 'export PATH="$HOME/.dotnet/tools:$PATH"' >> ~/.zshrc && source ~/.zshrc
+> ```
+
 ## Production
 
 For production deployment, create override files for each service:
