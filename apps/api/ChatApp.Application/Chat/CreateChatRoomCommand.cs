@@ -20,6 +20,8 @@ namespace ChatApp.Application.Chat
     public class CreateChatRoomCommandResult
     {
         public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
     }
 
     public sealed class CreateChatRoomCommandHandler : ICommandProcessor<CreateChatRoomCommand, CreateChatRoomCommandResult>
@@ -54,6 +56,8 @@ namespace ChatApp.Application.Chat
             return new CreateChatRoomCommandResult
             {
                 Code = newRoom.Id.ToString(),
+                Name = newRoom.Name,
+                CreatedAt = newRoom.CreatedAt,
             };
         }
     }

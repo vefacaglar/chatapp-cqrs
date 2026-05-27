@@ -13,6 +13,7 @@ export default function ChatRoomPage({ userName }) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
+  const pendingMessagesRef = useRef(new Set());
 
   useRoomSocket(roomId);
 
@@ -34,9 +35,21 @@ export default function ChatRoomPage({ userName }) {
   }, [roomId, navigate]);
 
   useSocketEvent('message:new', (message) => {
+    console.log('[DEBUG] message:new received:', message);
     if (message.roomId === roomId) {
       setRoom((prev) => {
         if (!prev) return prev;
+        const pendingId = [...pendingMessagesRef.current].find((id) => {
+          const m = prev.messages?.find((m) => m.id === id);
+          return m?.userName === message.userName && m?.message === message.message;
+        });
+        if (pendingId) {
+          pendingMessagesRef.current.delete(pendingId);
+          return {
+            ...prev,
+            messages: (prev.messages || []).map((m) => (m.id === pendingId ? message : m)),
+          };
+        }
         return {
           ...prev,
           messages: [...(prev.messages || []), message],
@@ -56,10 +69,36 @@ export default function ChatRoomPage({ userName }) {
     }
 
     setSending(true);
+    const optimisticMessage = {
+      id: crypto.randomUUID(),
+      userName,
+      message: text,
+      createdAt: new Date().toISOString(),
+      roomId,
+    };
+
+    pendingMessagesRef.current.add(optimisticMessage.id);
+
+    setRoom((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        messages: [...(prev.messages || []), optimisticMessage],
+      };
+    });
+
     try {
       await sendMessage(roomId, userName, text);
     } catch {
       toast.error('Failed to send message');
+      pendingMessagesRef.current.delete(optimisticMessage.id);
+      setRoom((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          messages: (prev.messages || []).filter((m) => m.id !== optimisticMessage.id),
+        };
+      });
     } finally {
       setSending(false);
     }
@@ -87,7 +126,7 @@ export default function ChatRoomPage({ userName }) {
           </svg>
         </button>
         <div className="w-11 h-11 rounded-xl bg-vscode-accent flex items-center justify-center text-white font-bold shadow-md shadow-vscode-accent/20">
-          {room.name[0].toUpperCase()}
+          {room.name?.[0]?.toUpperCase() || '?'}
         </div>
         <div>
           <h2 className="font-semibold text-vscode-text text-lg">{room.name}</h2>

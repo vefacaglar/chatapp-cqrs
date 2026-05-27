@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { SocketProvider } from './context/SocketContext';
+import { SocketProvider } from './context/SocketContext.jsx';
 import { getChatRooms } from './api/chatApi';
 import { useSocketEvent } from './hooks/useSocket';
 import ChatRoomList from './components/ChatRoomList';
@@ -9,7 +9,7 @@ import CreateRoomModal from './components/CreateRoomModal';
 import ChatRoomPage from './pages/ChatRoomPage';
 import WelcomePage from './pages/WelcomePage';
 
-function AppLayout({ userName, rooms, onRefresh }) {
+function AppLayout({ userName, rooms, onRefresh, onRoomCreated }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -104,7 +104,7 @@ function AppLayout({ userName, rooms, onRefresh }) {
       <CreateRoomModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onCreated={onRefresh}
+        onCreated={onRoomCreated}
       />
     </div>
   );
@@ -124,6 +124,15 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRoomCreated = (result) => {
+    setRooms(prev => [...prev, {
+      id: result.code,
+      name: result.name || 'Unnamed Room',
+      createdAt: result.createdAt || new Date().toISOString(),
+      messages: [],
+    }]);
   };
 
   useEffect(() => {
@@ -178,7 +187,7 @@ export default function App() {
             <div className="animate-spin w-10 h-10 border-2 border-vscode-accent border-t-transparent rounded-full"></div>
           </div>
         ) : (
-          <AppLayout userName={userName} rooms={rooms} onRefresh={fetchRooms} />
+          <AppLayout userName={userName} rooms={rooms} onRefresh={fetchRooms} onRoomCreated={handleRoomCreated} />
         )}
       </BrowserRouter>
     </SocketProvider>

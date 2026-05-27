@@ -30,7 +30,7 @@ export default function ChatRoomList({ rooms }) {
                 ? 'bg-vscode-accent shadow-md shadow-vscode-accent/20'
                 : 'bg-vscode-input'
             }`}>
-              {room.name[0].toUpperCase()}
+              {room.name?.[0]?.toUpperCase() || '?'}
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate text-sm">{room.name}</p>

@@ -31,9 +31,13 @@ export function useRoomSocket(roomId) {
   useEffect(() => {
     if (!socket || !roomId) return;
 
-    socket.emit('join:room', roomId);
+    const join = () => socket.emit('join:room', roomId);
+
+    socket.on('connect', join);
+    join();
 
     return () => {
+      socket.off('connect', join);
       socket.emit('leave:room', roomId);
     };
   }, [socket, roomId]);

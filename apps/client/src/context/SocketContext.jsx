@@ -7,7 +7,7 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
 export function SocketProvider({ children }) {
   const [socket] = useState(() =>
     io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling'],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
@@ -15,20 +15,32 @@ export function SocketProvider({ children }) {
   );
 
   useEffect(() => {
-    socket.on('connect', () => {
+    const onConnect = () => {
       console.log('Socket.IO connected:', socket.id);
-    });
+    };
 
-    socket.on('disconnect', (reason) => {
+    const onDisconnect = (reason) => {
       console.log('Socket.IO disconnected:', reason);
-    });
+    };
 
-    socket.on('connect_error', (err) => {
+    const onConnectError = (err) => {
       console.error('Socket.IO connection error:', err.message);
-    });
+    };
+
+    const onAny = (event, ...args) => {
+      console.log(`[DEBUG] Socket event received: "${event}"`, args);
+    };
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('connect_error', onConnectError);
+    socket.onAny(onAny);
 
     return () => {
-      socket.close();
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('connect_error', onConnectError);
+      socket.offAny(onAny);
     };
   }, [socket]);
 
