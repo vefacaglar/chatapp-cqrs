@@ -20,7 +20,7 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated }) {
       setName('');
       onCreated(result);
       onClose();
-    } catch (err) {
+    } catch {
       setError('Failed to create room. Please try again.');
     } finally {
       setLoading(false);

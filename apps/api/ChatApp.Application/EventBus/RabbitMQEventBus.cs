@@ -130,9 +130,24 @@ namespace ChatApp.Application.EventBus
                 var eventName = ea.RoutingKey;
                 var message = Encoding.UTF8.GetString(ea.Body.ToArray());
 
-                await ProcessEvent(eventName, message);
+                try
+                {
+                    var processed = await ProcessEvent(eventName, message);
 
-                await channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
+                    if (processed)
+                    {
+                        await channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
+                    }
+                    else
+                    {
+                        await channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing event {EventName}; requeueing message", eventName);
+                    await channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true);
+                }
             };
 
             channel.BasicConsumeAsync(queue: QUEUE_NAME,
@@ -149,34 +164,36 @@ namespace ChatApp.Application.EventBus
             return channel;
         }
 
-        private async Task ProcessEvent(string eventName, string message)
+        private async Task<bool> ProcessEvent(string eventName, string message)
         {
-            if (_subsManager.ContainsKey(eventName))
-            {
-                var @type = _subsManager[eventName];
-                var @event = JsonConvert.DeserializeObject(message, @type) as IEvent;
-
-                if (@event != null)
-                {
-                    try
-                    {
-                        await _eventDispatcher.Dispatch(@event);
-                        _logger.LogInformation("Processed event {EventName}", eventName);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error processing event {EventName}", eventName);
-                    }
-                }
-                else
-                {
-                    _logger.LogWarning("Could not deserialize event {EventName}", eventName);
-                }
-            }
-            else
+            if (!_subsManager.ContainsKey(eventName))
             {
                 _logger.LogWarning("No handler registered for event {EventName}", eventName);
+                return false;
             }
+
+            var @type = _subsManager[eventName];
+            IEvent? @event;
+
+            try
+            {
+                @event = JsonConvert.DeserializeObject(message, @type) as IEvent;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Could not deserialize event {EventName}", eventName);
+                return false;
+            }
+
+            if (@event == null)
+            {
+                _logger.LogWarning("Could not deserialize event {EventName}", eventName);
+                return false;
+            }
+
+            await _eventDispatcher.Dispatch(@event);
+            _logger.LogInformation("Processed event {EventName}", eventName);
+            return true;
         }
 
         public void Dispose(bool disposing)

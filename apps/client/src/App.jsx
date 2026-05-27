@@ -127,9 +127,30 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (userName) {
-      fetchRooms();
-    }
+    if (!userName) return;
+
+    let isActive = true;
+
+    const loadRooms = async () => {
+      try {
+        const data = await getChatRooms();
+        if (isActive) {
+          setRooms(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch rooms:', err);
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadRooms();
+
+    return () => {
+      isActive = false;
+    };
   }, [userName]);
 
   const handleSetUserName = (name) => {

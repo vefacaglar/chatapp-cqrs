@@ -38,6 +38,12 @@ namespace ChatApp.Api.Controllers
         {
             var command = new SendMessageCommand(request.RoomId, request.Message, request.UserName);
             var result = await _commandDispatcher.DispatchAsync<SendMessageCommand, SendMessageCommandResult>(command);
+
+            if (!result.Success)
+            {
+                return NotFound();
+            }
+
             return Ok(result);
         }
 

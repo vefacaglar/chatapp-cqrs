@@ -1,5 +1,9 @@
-import { useEffect, useCallback, useRef, useState } from 'react';
-import { useSocket } from '../context/SocketContext';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { SocketContext } from '../context/socketContext';
+
+export function useSocket() {
+  return useContext(SocketContext);
+}
 
 export function useSocketEvent(event, handler) {
   const socket = useSocket();
@@ -37,12 +41,10 @@ export function useRoomSocket(roomId) {
 
 export function useSocketConnected() {
   const socket = useSocket();
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(() => socket?.connected ?? false);
 
   useEffect(() => {
     if (!socket) return;
-
-    setConnected(socket.connected);
 
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);

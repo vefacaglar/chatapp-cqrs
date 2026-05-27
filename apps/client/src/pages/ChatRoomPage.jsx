@@ -22,7 +22,7 @@ export default function ChatRoomPage({ userName }) {
         setLoading(true);
         const data = await getChatRoom(roomId);
         setRoom(data);
-      } catch (err) {
+      } catch {
         toast.error('Failed to load room');
         navigate('/');
       } finally {
@@ -58,7 +58,7 @@ export default function ChatRoomPage({ userName }) {
     setSending(true);
     try {
       await sendMessage(roomId, userName, text);
-    } catch (err) {
+    } catch {
       toast.error('Failed to send message');
     } finally {
       setSending(false);
