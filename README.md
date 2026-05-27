@@ -73,38 +73,38 @@ chatapp-cqrs/
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Docker](https://www.docker.com/)
-- [Node.js 20+](https://nodejs.org/) (pnpm otomatik yuklenir)
+- [Node.js 20+](https://nodejs.org/) (pnpm is installed automatically)
 
-### Tek Komutla Kurulum ve Calistirma
+### One-Command Setup and Run
 
-Her seyi tek komutla kur ve baslat:
+Install and start everything with a single command:
 
 ```bash
 bash scripts/setup.sh
 ```
 
-Bu script:
-1. pnpm yuklu degilse otomatik yukler
-2. JS bagliliklarini yukler (pnpm install)
-3. NuGet paketlerini restore eder
-4. Docker servislerini baslatir (PostgreSQL, MongoDB, RabbitMQ, Redis)
-5. Veritabani migration uygular
+This script:
+1. Installs pnpm automatically if not already installed
+2. Installs JS dependencies (pnpm install)
+3. Restores NuGet packages
+4. Starts Docker services (PostgreSQL, MongoDB, RabbitMQ, Redis)
+5. Applies database migrations
 
-Sonra tum servisleri baslat:
+Then start all services:
 
 ```bash
 pnpm dev:all
 ```
 
-Bu komut .NET API, Socket.IO Bridge ve React Client'i paralel baslatir.
+This command starts the .NET API, Socket.IO Bridge, and React Client in parallel.
 
-### Ayri Ayri Calistirma
+### Running Individually
 
 ```bash
-# Docker altyapi
+# Docker infrastructure
 pnpm dev:infra
 
-# Sadece JS uygulamalari
+# JS applications only
 pnpm dev
 
 # .NET API
@@ -129,10 +129,10 @@ npx turbo dev --filter=@chatapp/client
 ### Build for Production
 
 ```bash
-# Tum JS uygulamalari
+# All JS applications
 pnpm build
 
-# Tek uygulama
+# Single application
 pnpm --filter @chatapp/client build
 ```
 
