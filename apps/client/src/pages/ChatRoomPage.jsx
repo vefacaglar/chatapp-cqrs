@@ -23,7 +23,7 @@ export default function ChatRoomPage({ userName }) {
         const data = await getChatRoom(roomId);
         setRoom(data);
       } catch (err) {
-        toast.error('Oda yüklenemedi');
+        toast.error('Failed to load room');
         navigate('/');
       } finally {
         setLoading(false);
@@ -51,7 +51,7 @@ export default function ChatRoomPage({ userName }) {
 
   const handleSend = async (text) => {
     if (!userName) {
-      toast.error('Lütfen önce bir kullanıcı adı belirleyin');
+      toast.error('Please set a username first');
       return;
     }
 
@@ -59,7 +59,7 @@ export default function ChatRoomPage({ userName }) {
     try {
       await sendMessage(roomId, userName, text);
     } catch (err) {
-      toast.error('Mesaj gönderilemedi');
+      toast.error('Failed to send message');
     } finally {
       setSending(false);
     }
@@ -92,7 +92,7 @@ export default function ChatRoomPage({ userName }) {
         <div>
           <h2 className="font-semibold text-vscode-text text-lg">{room.name}</h2>
           <p className="text-sm text-vscode-muted">
-            {room.messages?.length || 0} mesaj
+            {room.messages?.length || 0} messages
           </p>
         </div>
       </div>

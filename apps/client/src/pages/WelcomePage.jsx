@@ -22,15 +22,15 @@ export default function WelcomePage({ onSetUserName }) {
           </svg>
         </div>
 
-        <h1 className="text-3xl font-bold text-vscode-text mb-2">ChatApp'e Hoş Geldin</h1>
-        <p className="text-vscode-muted mb-8">Sohbete katılmak için kullanıcı adını gir</p>
+        <h1 className="text-3xl font-bold text-vscode-text mb-2">Welcome to ChatApp</h1>
+        <p className="text-vscode-muted mb-8">Enter your username to join the chat</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Kullanıcı adınız..."
+            placeholder="Your username..."
             className="w-full px-4 py-3.5 bg-vscode-input border border-vscode-input-border rounded-lg text-vscode-text placeholder-vscode-dim focus:outline-none focus:ring-2 focus:ring-vscode-accent/50 focus:border-vscode-accent transition-all duration-200"
             autoFocus
           />
@@ -39,7 +39,7 @@ export default function WelcomePage({ onSetUserName }) {
             disabled={!name.trim()}
             className="w-full py-3.5 bg-vscode-accent hover:bg-vscode-accent-hover disabled:bg-vscode-input disabled:text-vscode-dim disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-vscode-accent/30 active:scale-[0.98]"
           >
-            Sohbete Başla
+            Start Chatting
           </button>
         </form>
       </div>

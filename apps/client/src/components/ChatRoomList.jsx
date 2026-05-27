@@ -6,8 +6,8 @@ export default function ChatRoomList({ rooms }) {
   if (!rooms || rooms.length === 0) {
     return (
       <div className="p-4 text-center text-vscode-dim">
-        <p>Henüz oda yok.</p>
-        <p className="text-sm mt-1">Yeni bir oda oluşturun!</p>
+        <p>No rooms yet.</p>
+        <p className="text-sm mt-1">Create a new room!</p>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default function ChatRoomList({ rooms }) {
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate text-sm">{room.name}</p>
               <p className="text-xs text-vscode-dim mt-0.5">
-                {room.messages?.length || 0} mesaj
+                {room.messages?.length || 0} messages
               </p>
             </div>
           </div>

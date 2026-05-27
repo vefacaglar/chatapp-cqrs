@@ -16,57 +16,57 @@ cd "$(dirname "$0")/.."
 
 # ── 1. pnpm ──
 if ! command -v pnpm &> /dev/null; then
-  log "pnpm bulunamadi, yukleniyor..."
+  log "pnpm not found, installing..."
   npm install -g pnpm
-  ok "pnpm yuklendi"
+  ok "pnpm installed"
 else
-  ok "pnpm mevcut: $(pnpm --version)"
+  ok "pnpm available: $(pnpm --version)"
 fi
 
 # ── 2. .NET SDK ──
 if ! command -v dotnet &> /dev/null; then
-  err "dotnet SDK bulunamadi. Lutfen .NET 10 SDK yukleyin: https://dotnet.microsoft.com/download"
+  err "dotnet SDK not found. Please install .NET 10 SDK: https://dotnet.microsoft.com/download"
   exit 1
 fi
-ok ".NET SDK mevcut: $(dotnet --version)"
+ok ".NET SDK available: $(dotnet --version)"
 
 # ── 3. Docker ──
 if ! command -v docker &> /dev/null; then
-  err "Docker bulunamadi. Lutfen Docker yukleyin: https://www.docker.com/"
+  err "Docker not found. Please install Docker: https://www.docker.com/"
   exit 1
 fi
-ok "Docker mevcut"
+ok "Docker available"
 
-# ── 4. JS bagliliklari ──
-log "JS bagliliklari yukleniyor (pnpm install)..."
+# ── 4. JS dependencies ──
+log "Installing JS dependencies (pnpm install)..."
 pnpm install
-ok "JS baglilikleri yuklendi"
+ok "JS dependencies installed"
 
 # ── 5. .NET restore ──
-log "NuGet paketleri restore ediliyor..."
+log "Restoring NuGet packages..."
 dotnet restore
-ok "NuGet paketleri restore edildi"
+ok "NuGet packages restored"
 
 # ── 6. Docker Compose ──
-log "Docker servisleri baslatiliyor..."
+log "Starting Docker services..."
 docker compose up -d
-ok "Docker servisleri baslatildi"
+ok "Docker services started"
 
 # ── 7. EF Migrations ──
-log "Veritabani migration uygulanıyor..."
+log "Applying database migrations..."
 dotnet ef database update \
   --project apps/api/ChatApp.Infrastructure \
-  --startup-project apps/api/ChatApp.Api 2>/dev/null || warn "Migration atlaniyor (veritabani hazir olmayabilir)"
+  --startup-project apps/api/ChatApp.Api 2>/dev/null || warn "Migration skipped (database may not be ready)"
 
 echo ""
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}  Kurulum tamamlandi!${NC}"
+echo -e "${GREEN}  Setup complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
-echo -e "Tum servisleri baslatmak icin:"
+echo -e "To start all services:"
 echo -e "  ${BLUE}pnpm dev:all${NC}"
 echo ""
-echo -e "Ayri ayri baslatmak icin:"
-echo -e "  ${BLUE}pnpm dev${NC}                  # JS uygulamalari"
+echo -e "To start individually:"
+echo -e "  ${BLUE}pnpm dev${NC}                  # JS applications"
 echo -e "  ${BLUE}dotnet run --project apps/api/ChatApp.Api${NC}  # .NET API"
 echo ""

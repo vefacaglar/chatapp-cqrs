@@ -2,7 +2,7 @@ export default function MessageList({ messages }) {
   if (!messages || messages.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-vscode-dim">
-        <p>Henüz mesaj yok. İlk mesajı gönderin!</p>
+        <p>No messages yet. Send the first one!</p>
       </div>
     );
   }
@@ -20,7 +20,7 @@ export default function MessageList({ messages }) {
                 {msg.userName}
               </span>
               <span className="text-xs text-vscode-dim">
-                {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString('tr-TR') : ''}
+                {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString('en-US') : ''}
               </span>
             </div>
             <p className="text-vscode-text-bright mt-1 break-words bg-vscode-sidebar/50 rounded-lg px-3 py-2 inline-block">
