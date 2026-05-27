@@ -14,7 +14,10 @@ A chat application built on .NET 10 using CQRS (Command Query Responsibility Seg
 | RabbitMQ | 3 | Event Bus |
 | Redis | 7 | Pub/Sub (Socket.IO bridge) |
 | Entity Framework Core | 10.0 | ORM |
+| Npgsql.EntityFrameworkCore.PostgreSQL | 10.0 | PostgreSQL provider |
 | StackExchange.Redis | 2.8.16 | Redis client |
+| Polly | 8.5.2 | Resilience/retry policies |
+| Newtonsoft.Json | 13.0.3 | JSON serialization |
 | CustomDispatcher | 1.0.0 | CQRS Dispatch |
 | Scalar | 2.4.1 | API Documentation |
 
@@ -29,6 +32,14 @@ A chat application built on .NET 10 using CQRS (Command Query Responsibility Seg
 | Axios | 1 | HTTP client |
 | React Router | 7 | Client-side routing |
 | Turborepo | 2 | Monorepo build system |
+
+### Testing
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| xUnit | 2.9.3 | Test framework |
+| Moq | 4.20.72 | Mocking library |
+| Coverlet | - | Code coverage |
 
 ### Socket Bridge (Node.js)
 
@@ -104,26 +115,15 @@ This command starts the .NET API, Socket.IO Bridge, and React Client in parallel
 # Docker infrastructure
 pnpm dev:infra
 
-# JS applications only
+# JS applications (Socket.IO Bridge + React Client)
 pnpm dev
+
+# Or run them individually
+pnpm --filter @chatapp/socket-bridge dev
+pnpm --filter @chatapp/client dev
 
 # .NET API
 dotnet run --project apps/api/ChatApp.Api
-```
-
-**Terminal 2 - Socket.IO Bridge + React Client (via Turborepo):**
-```bash
-npm run dev
-```
-
-Or run them individually:
-
-```bash
-# Socket.IO Bridge only
-npx turbo dev --filter=@chatapp/socket-bridge
-
-# React Client only
-npx turbo dev --filter=@chatapp/client
 ```
 
 ### Build for Production
@@ -146,6 +146,34 @@ pnpm --filter @chatapp/client build
 | API Documentation | http://localhost:5268/scalar/v1 |
 | RabbitMQ Management | http://localhost:15672 |
 
+## Environment Variables
+
+### .NET API
+
+Configuration is read from `appsettings.json` and `appsettings.{Environment}.json`. Connection strings and service endpoints can be overridden via environment variables using standard .NET configuration binding:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ConnectionStrings__ChatDbCommand` | `Host=localhost;...` | PostgreSQL write database |
+| `MongoDb__ConnectionString` | `mongodb://localhost:27017` | MongoDB read database |
+| `Redis__ConnectionString` | `localhost:6379` | Redis pub/sub |
+| `RetryCount` | `5` | RabbitMQ retry attempts |
+
+### Socket Bridge
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REDIS_HOST` | `localhost` | Redis host for pub/sub subscription |
+| `REDIS_PORT` | `6379` | Redis port |
+| `SOCKETIO_PORT` | `3001` | Socket.IO server port |
+| `CORS_ORIGIN` | `*` | CORS allowed origin |
+
+### React Client
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_SOCKET_URL` | `http://localhost:3001` | Socket.IO bridge URL |
+
 ## API Endpoints
 
 ### Command (Write)
@@ -165,34 +193,76 @@ pnpm --filter @chatapp/client build
 ## CQRS Flow
 
 ```
-1. POST /api/v1/chat  ──▶  CreateChatRoomCommand
+1. POST /api/v1/chat  ──▶  LoggingDispatchMiddleware
                               │
-                              ▼
-                        Write to PostgreSQL
-                              │
-                              ├─▶ Publish EventCreatedChatRoom (RabbitMQ)
-                              │     │
-                              │     ▼
-                              │   CreatedChatRoomEventHandler
-                              │     │
-                              │     ├─▶ Write to MongoDB (Read Model)
-                              │     └─▶ Publish to Redis (chat:room:created)
-                              │           │
-                              │           ▼
-                              │         Socket.IO Bridge → WebSocket → Client
-                              │
-                              └─▶ Return { code: "guid" }
-
-2. GET /api/v1/chat/{id}  ──▶  GetChatRoomByIdQuery
+                              ├─▶ Log request + persist to EventLog (PostgreSQL)
+                              └─▶ Dispatch CreateChatRoomCommand
                                     │
                                     ▼
-                              Read from MongoDB
+                              Write to PostgreSQL
+                                    │
+                                    ├─▶ Publish EventCreatedChatRoom (RabbitMQ)
+                                    │     │
+                                    │     ▼
+                                    │   CreatedChatRoomEventHandler
+                                    │     │
+                                    │     ├─▶ Write to MongoDB (Read Model)
+                                    │     └─▶ Publish to Redis (chat:room:created)
+                                    │           │
+                                    │           ▼
+                                    │         Socket.IO Bridge → WebSocket → Client
+                                    │
+                                    └─▶ Return { code: "guid" }
+
+2. GET /api/v1/chat/{id}  ──▶  LoggingDispatchMiddleware
+                                    │
+                                    ├─▶ Log request + persist to EventLog (PostgreSQL)
+                                    └─▶ Dispatch GetChatRoomByIdQuery
+                                          │
+                                          ▼
+                                    Read from MongoDB
 ```
+
+### Event Sourcing
+
+Every command and query is logged to the `EventLog` table in PostgreSQL via `LoggingDispatchMiddleware`, providing a complete audit trail. Domain events (`EventCreatedChatRoom`, `MessageSentEvent`) are published to RabbitMQ and consumed by event handlers that update the MongoDB read model. The event bus uses Polly for retry with exponential backoff.
+
+## Database Migrations
+
+```bash
+# Apply EF Core migrations manually
+dotnet ef database update \
+  --project apps/api/ChatApp.Infrastructure \
+  --startup-project apps/api/ChatApp.Api
+```
+
+Or let `bash scripts/setup.sh` handle it automatically.
 
 ## Tests
 
 ```bash
 dotnet test
+```
+
+## Production
+
+For production deployment, create override files for each service:
+
+- **Backend:** `apps/api/ChatApp.Api/appsettings.Production.json` — override connection strings and `RetryCount`
+- **Client:** Set `VITE_SOCKET_URL` to the production Socket.IO bridge URL
+- **Socket Bridge:** Set `REDIS_HOST`, `REDIS_PORT`, `SOCKETIO_PORT`, and `CORS_ORIGIN` for the production environment
+- **Infrastructure:** Use `docker-compose.override.yml` or environment-specific compose files
+
+Build the JS applications for production:
+
+```bash
+pnpm build
+```
+
+Publish the .NET API:
+
+```bash
+dotnet publish apps/api/ChatApp.Api -c Release -o out
 ```
 
 ## Docker Compose Services
