@@ -27,20 +27,14 @@ export function SocketProvider({ children }) {
       console.error('Socket.IO connection error:', err.message);
     };
 
-    const onAny = (event, ...args) => {
-      console.log(`[DEBUG] Socket event received: "${event}"`, args);
-    };
-
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
-    socket.onAny(onAny);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('connect_error', onConnectError);
-      socket.offAny(onAny);
     };
   }, [socket]);
 

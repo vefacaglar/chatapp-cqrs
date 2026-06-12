@@ -35,7 +35,6 @@ export default function ChatRoomPage({ userName }) {
   }, [roomId, navigate]);
 
   useSocketEvent('message:new', (message) => {
-    console.log('[DEBUG] message:new received:', message);
     if (message.roomId === roomId) {
       setRoom((prev) => {
         if (!prev) return prev;

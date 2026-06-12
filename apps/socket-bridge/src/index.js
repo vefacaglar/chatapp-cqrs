@@ -73,11 +73,7 @@ redisSub.on('pmessage', (pattern, channel, message) => {
     const roomName = `room:${roomId}`;
 
     if (roomId) {
-      const roomSockets = io.sockets.adapter.rooms.get(roomName);
-      const socketCount = roomSockets ? roomSockets.size : 0;
-      console.log(`[DEBUG] pmessage: channel="${channel}", room="${roomName}", socketsInRoom=${socketCount}, data=`, data);
       io.to(roomName).emit('message:new', data);
-      console.log(`Broadcast message to room:${roomId}`);
     }
   } catch (err) {
     console.error('Failed to process pmessage:', err);
@@ -96,20 +92,6 @@ redisSub.on('message', (channel, message) => {
   } catch (err) {
     console.error('Failed to process message:', err);
   }
-});
-
-setInterval(() => {
-  const rooms = io.sockets.adapter.rooms;
-  const sockets = io.sockets.adapter.sids.size;
-  console.log(`[DEBUG] Connected sockets: ${sockets}, Rooms:`, [...rooms.keys()]);
-}, 10000);
-
-io.of('/').adapter.on('join-room', (room, id) => {
-  console.log(`[DEBUG] Socket ${id} joined room "${room}"`);
-});
-
-io.of('/').adapter.on('leave-room', (room, id) => {
-  console.log(`[DEBUG] Socket ${id} left room "${room}"`);
 });
 
 process.on('SIGINT', () => {
