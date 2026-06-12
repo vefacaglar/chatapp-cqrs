@@ -15,6 +15,8 @@ A chat application built on .NET 10 using CQRS (Command Query Responsibility Seg
 | Redis | 7 | Pub/Sub (Socket.IO bridge) |
 | Entity Framework Core | 10.0 | ORM |
 | Npgsql.EntityFrameworkCore.PostgreSQL | 10.0 | PostgreSQL provider |
+| MongoDB.Driver | 3.3.0 | MongoDB client |
+| RabbitMQ.Client | 7.1.2 | RabbitMQ client |
 | StackExchange.Redis | 2.8.16 | Redis client |
 | Polly | 8.5.2 | Resilience/retry policies |
 | Newtonsoft.Json | 13.0.3 | JSON serialization |
@@ -28,9 +30,10 @@ A chat application built on .NET 10 using CQRS (Command Query Responsibility Seg
 | React | 19 | UI framework |
 | Vite | 8 | Build tool |
 | Tailwind CSS | 4 | Styling |
-| Socket.IO Client | 4 | Real-time communication |
+| Socket.IO Client | 4.8 | Real-time communication |
 | Axios | 1 | HTTP client |
 | React Router | 7 | Client-side routing |
+| react-hot-toast | 2.6 | Toast notifications |
 | Turborepo | 2 | Monorepo build system |
 
 ### Testing
@@ -39,14 +42,14 @@ A chat application built on .NET 10 using CQRS (Command Query Responsibility Seg
 |------------|---------|---------|
 | xUnit | 2.9.3 | Test framework |
 | Moq | 4.20.72 | Mocking library |
-| Coverlet | - | Code coverage |
+| Coverlet | 6.0.4 | Code coverage |
 
 ### Socket Bridge (Node.js)
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Socket.IO | 4 | WebSocket server |
-| ioredis | 5 | Redis pub/sub subscriber |
+| Socket.IO | 4.7 | WebSocket server |
+| ioredis | 5.4 | Redis pub/sub subscriber |
 
 ## Projects
 
@@ -138,13 +141,13 @@ pnpm --filter @chatapp/client build
 
 ### Service URLs
 
-| Service | URL |
-|---------|-----|
-| React Client | http://localhost:3000 |
-| Socket.IO Bridge | http://localhost:3001 |
-| .NET API | http://localhost:5268 |
-| API Documentation | http://localhost:5268/scalar/v1 |
-| RabbitMQ Management | http://localhost:15672 |
+| Service | URL | Notes |
+|---------|-----|-------|
+| React Client | http://localhost:3000 | Proxies `/api` to .NET API |
+| Socket.IO Bridge | http://localhost:3001 | WebSocket server |
+| .NET API | http://localhost:5268 | REST API |
+| API Documentation | http://localhost:5268/scalar/v1 | Scalar/OpenAPI docs |
+| RabbitMQ Management | http://localhost:15672 | guest/guest |
 
 ## Environment Variables
 
@@ -155,8 +158,12 @@ Configuration is read from `appsettings.json` and `appsettings.{Environment}.jso
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `ConnectionStrings__ChatDbCommand` | `Host=localhost;...` | PostgreSQL write database |
-| `MongoDb__ConnectionString` | `mongodb://localhost:27017` | MongoDB read database |
-| `Redis__ConnectionString` | `localhost:6379` | Redis pub/sub |
+| `ConnectionStrings__EventBus__Connection` | `localhost` | RabbitMQ host |
+| `ConnectionStrings__EventBus__UserName` | `guest` | RabbitMQ username |
+| `ConnectionStrings__EventBus__Password` | `guest` | RabbitMQ password |
+| `MongoDb__ConnectionString` | `mongodb://localhost:27017` | MongoDB connection string |
+| `MongoDb__DatabaseName` | `ChatDbRead` | MongoDB database name |
+| `Redis__ConnectionString` | `localhost:6379` | Redis connection string |
 | `RetryCount` | `5` | RabbitMQ retry attempts |
 
 ### Socket Bridge

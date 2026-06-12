@@ -372,3 +372,6 @@ coverage.xml
 
 # Vite
 apps/*/dist
+
+# macOS
+.DS_Store
